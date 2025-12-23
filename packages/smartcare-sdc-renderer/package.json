@@ -18,10 +18,10 @@
   },
   "homepage": "https://github.com/aehrc/smart-forms#readme",
   "dependencies": {
-    "@aehrc/smart-forms-renderer": "^1.2.11",
-    "@aehrc/sdc-assemble": "^2.0.2",
-    "@aehrc/sdc-populate": "^4.6.2",
-    "@aehrc/sdc-template-extract": "^1.0.14"
+    "@aehrc/smart-forms-renderer": "file:../smart-forms-renderer",
+    "@aehrc/sdc-assemble": "file:../sdc-assemble",
+    "@aehrc/sdc-populate": "file:../sdc-populate",
+    "@aehrc/sdc-template-extract": "file:../sdc-template-extract"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",

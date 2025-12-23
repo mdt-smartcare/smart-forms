@@ -15,6 +15,7 @@
   },
   "workspaces": [
     "apps/smart-forms-app",
+    "apps/smartcare-renderer-app",
     "packages/*",
     "services/*",
     "deployment/forms-server/*",

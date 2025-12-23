@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { useMemo } from 'react';
 import { useBuildForm } from '@aehrc/smart-forms-renderer';
 import type { BuildFormParams } from '@aehrc/smart-forms-renderer';
 import type { Questionnaire, QuestionnaireItem } from 'fhir/r4';
@@ -69,8 +70,13 @@ function useSmartcareBuildForm(params: SmartcareBuildFormParams): boolean {
   } = params;
 
   const languageToUse = language || questionnaire.language || 'en';
-  //I want to convert the questionnaire to the languageToUse
-  const questionnaireWithTranslations = convertQuestionnaireToLanguage(questionnaire, languageToUse);
+  
+  // Memoize the translated questionnaire to prevent unnecessary rebuilds
+  // Only recalculate when questionnaire or language actually changes
+  const questionnaireWithTranslations = useMemo(() => {
+    return convertQuestionnaireToLanguage(questionnaire, languageToUse);
+  }, [questionnaire, languageToUse]);
+
   // Call the underlying useBuildForm hook
   const isBuilding = useBuildForm({
     questionnaire: questionnaireWithTranslations,
@@ -89,31 +95,24 @@ function useSmartcareBuildForm(params: SmartcareBuildFormParams): boolean {
   return isBuilding;
 }
 
+/**
+ * Recursively applies translations to a questionnaire item and all its nested children.
+ */
+function applyTranslationsToItem(item: QuestionnaireItem, language: string): void {
+  item.text = getTranslationText(item, language) || item.text;
+  if (item.item && item.item.length > 0) {
+    item.item.forEach((childItem: QuestionnaireItem) => {
+      applyTranslationsToItem(childItem, language);
+    });
+  }
+}
+
 function convertQuestionnaireToLanguage(questionnaire: Questionnaire, language: string) {
   //Loop through the questionnaire and convert the items to the language
   //create a new questionnaire with the translations
   const questionnaireToUse = { ...questionnaire };
   questionnaireToUse.item?.forEach((item: QuestionnaireItem) => {
-    //we need to loop through the extension and find the one with the language code
-    //and return the content
-    
-    //1. get the translation text for the item
-    //2. if the translation text is not found, use the original text
-    //3. add the translation text to the item
-    //4. loop through the items and convert the text to the language
-    //5. return the questionnaire with the translations
-    //6. the translation text is stored in the extension with the url http://example.com/fhir/translation
-    //7. the language code is stored in the extension with the url http://example.com/fhir/translation/lang
-    //8. the content is stored in the extension with the url http://example.com/fhir/translation/content
-    item.text = getTranslationText(item, language) || item.text;
-    item.item?.forEach((childItem: QuestionnaireItem) => {
-      childItem.text = getTranslationText(childItem, language) || childItem.text;
-      if (childItem.item && childItem.item.length > 0) {
-        childItem.item.forEach((grandchildItem: QuestionnaireItem) => {
-          grandchildItem.text = getTranslationText(grandchildItem, language) || grandchildItem.text;
-        });
-      }
-    });
+    applyTranslationsToItem(item, language);
   });
   return questionnaireToUse;
 }
